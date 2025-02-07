@@ -5,7 +5,7 @@ Server app (Crow.h), with web interface (HTMX), generating health parameter grap
 
 # the tech stack
 
-1. front-end htmx
+1. front-end HTMX
 
 2. c++ backend with libraries 
 	http server

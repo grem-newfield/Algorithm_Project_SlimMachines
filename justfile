@@ -15,7 +15,7 @@ CONTAINER := TARGET + "_container"
 # Define the build rule for the C++ code
 build:
     {{CXX}} {{CXXFLAGS}} -c main.cpp -o main.o
-    {{CXX}} {{CXXFLAGS}} -c lodepng.cpp -o lodepng.o
+    {{CXX}} {{CXXFLAGS}} -c /usr/local/include/lodepng.cpp -o lodepng.o
     {{CXX}} {{CXXFLAGS}} -o {{TARGET}} {{OBJS}} {{LDFLAGS}}
 
 # Define the clean rule

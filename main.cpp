@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+const std::string test="hello world";
+
 void debug(const char *s) { std::cout << "DEBUG: " << s << std::endl; }
 void debug(std::string s) { std::cout << "DEBUG: " << s << std::endl; }
 

@@ -26,8 +26,8 @@ RUN git clone https://github.com/CrowCpp/Crow.git /tmp/crow && \
 WORKDIR /app
 
 # Download lodepng files
-RUN wget https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp -O lodepng.cpp && \
-    wget https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.h -O lodepng.h
+RUN wget https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp -O /usr/local/include/lodepng.cpp && \
+    wget https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.h -O /usr/local/include/lodepng.h
 
 
 # Copy the current directory contents into the container at /app

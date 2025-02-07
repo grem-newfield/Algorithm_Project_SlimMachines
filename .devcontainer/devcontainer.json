@@ -1,0 +1,25 @@
+{
+  "name": "Lean Machines Dev Container",
+  "build": {
+    "dockerfile": "../Dockerfile" 
+  },
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",     // C++ IntelliSense
+        "ms-vscode.cmake-tools",  // CMake Support
+        "vadimcn.vscode-lldb",    // Debugging with LLDB
+        "justusadam.language-just" // Justfile syntax highlighting
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash" // Use Bash as default terminal
+      }
+    }
+  },
+  "runArgs": ["--network", "host"],  // Use host networking (alternative)
+  "remoteUser": "root",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ]
+}

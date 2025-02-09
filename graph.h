@@ -1,3 +1,4 @@
+#pragma once
 #include "lodepng.h"
 #include <algorithm>
 #include <chrono>
@@ -171,7 +172,6 @@ std::vector<unsigned char> generate_png(int width, int height,
 
   // draw x and y axis
 
-  int o = 10; // offset
   for (int o = 10; o < 13; o++) {
     draw_line(image, width, height, o, o, width - o, o, 255, 255, 255, 255);
     draw_line(image, width, height, width - o, o, width - o, height - o, 255,
@@ -241,78 +241,7 @@ std::vector<unsigned char> generate_png(int width, int height,
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
   float sec = (float)nanos / 1e9;
 
-  debug("Generated PNG in " + std::to_string(sec) + " seconds");
+  std::cout << "DEBUG: Generated PNG in " << sec << " seconds";
 
   return png;
-}
-
-std::vector<unsigned char> rescale(const std::vector<unsigned char> &in, int w0,
-                                   int h0, int w1, int h1, bool smooth) {
-  int numchannels = in.size() / (w0 * h0);
-  std::vector<unsigned char> out(w1 * h1 * numchannels);
-  if (smooth) {
-    // box filter.
-    std::vector<unsigned char> temp(w1 * h0 * numchannels);
-    for (int c = 0; c < numchannels; c++) {
-      for (int x = 0; x < w1; x++) {
-        float xaf = x * 1.0 * w0 / w1;
-        float xbf = (x + 1.0) * w0 / w1;
-        int xa = (int)xaf;
-        int xb = (int)xbf;
-        double norm = 1.0 / (xbf - xaf);
-        xaf -= std::floor(xaf);
-        xbf -= std::floor(xbf);
-        for (int y = 0; y < h0; y++) {
-          int index1 = x * numchannels + y * w1 * numchannels;
-          double val = 0;
-          for (int x0 = xa; x0 <= xb; x0++) {
-            int index0 = x0 * numchannels + y * w0 * numchannels;
-            double v = 1;
-            if (x0 == xa)
-              v -= xaf;
-            if (x0 == xb)
-              v -= (1 - xbf);
-            val += v * in[index0 + c];
-          }
-          temp[index1 + c] = val * norm;
-        }
-      }
-      for (int y = 0; y < h1; y++) {
-        float yaf = y * 1.0 * h0 / h1;
-        float ybf = (y + 1.0) * h0 / h1;
-        int ya = (int)yaf;
-        int yb = (int)ybf;
-        double norm = 1.0 / (ybf - yaf);
-        yaf -= std::floor(yaf);
-        ybf -= std::floor(ybf);
-        for (int x = 0; x < w1; x++) {
-          int index1 = x * numchannels + y * w1 * numchannels;
-          double val = 0;
-          for (int y0 = ya; y0 <= yb; y0++) {
-            int index0 = x * numchannels + y0 * w1 * numchannels;
-            double v = 1;
-            if (y0 == ya)
-              v -= yaf;
-            if (y0 == yb)
-              v -= (1 - ybf);
-            val += v * temp[index0 + c];
-          }
-          out[index1 + c] = val * norm;
-        }
-      }
-    }
-  } else {
-    for (int y = 0; y < h1; y++) {
-      int y0 = (int)((y + 0.5) * h0 / h1 - 0.5);
-      for (int x = 0; x < w1; x++) {
-        int x0 = (int)((x + 0.5) * w0 / w1 - 0.5);
-        int index0 = x0 * numchannels + y0 * w0 * numchannels;
-        int index1 = x * numchannels + y * w1 * numchannels;
-        for (int c = 0; c < numchannels; c++) {
-          out[index1 + c] = in[index0 + c];
-        }
-      }
-    }
-  }
-  return out;
 }

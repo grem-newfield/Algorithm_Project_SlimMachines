@@ -2,12 +2,13 @@
 #include <chrono>
 #include <crow.h>
 #include <crow/http_response.h>
+#include <crow/mustache.h>
 #include <iostream>
 #include <sqlite3.h>
 #include <string>
 #include <vector>
 
-const std::string test="hello world";
+const std::string test = "hello world";
 
 void debug(const char *s) { std::cout << "DEBUG: " << s << std::endl; }
 void debug(std::string s) { std::cout << "DEBUG: " << s << std::endl; }
@@ -75,18 +76,37 @@ int main() {
     return res;
   });
   CROW_ROUTE(app, "/")([]() {
-    crow::response res("<!DOCTYPE html>"
-                       "<body>Hello Lmao<br>"
-
-                       "<img src=\"/generate/image\" alt=\"Test Image\">"
-                       "</body></html>");
-
-    
-
-
-                   res.set_header("Connection", "Close");
+    auto page = crow::mustache::load("index.html");
+    std::string name = "Giovanni";
+    crow::mustache::context ctx({{"user", name}});
+    crow::response res(page.render(ctx));
+    res.set_header("Connection", "Close");
     return res;
   });
+
+  CROW_ROUTE(app, "/upload")
+      .methods(crow::HTTPMethod::POST)([](const crow::request &req) {
+        auto body = req.body;
+        crow::json::rvalue formData = crow::json::load(body);
+        // debug("form data: " + std::string(formData));
+
+        if (!formData) {
+          auto res = crow::response(400, "Invalid form data");
+          res.set_header("Connection", "Close");
+          return res;
+        }
+
+        // Access form fields
+        std::string dataInput = formData["dataInput"].s();
+
+        // Process the form data as needed
+        std::ostringstream os;
+        os << "Received data: " << dataInput;
+
+        auto res = crow::response(os.str());
+        res.set_header("Connection", "Close");
+        return res;
+      });
 
   app.port(8080).timeout(10).multithreaded().run();
 

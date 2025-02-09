@@ -1,0 +1,49 @@
+@font-face {
+  font-family: mondwest;
+  src: url("/static/fonts/PPMondwest-Regular.otf")
+    format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: mondwest;
+  src: url("/static/fonts/PPMondwest-Bold.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: bold;
+  font-display: swap;
+
+}
+
+@font-face {
+  font-family: newbit;
+  src: url("/static/fonts/PPMondwest-Regular.otf")
+    format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: newbit;
+  src: url("/static/fonts/PPMondwest-Bold.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: bold;
+  font-display: swap;
+}
+
+* {
+  background-color: #302828;
+  color: white;
+  font-family: mondwest;
+  text-shadow: 0.06em 0.06em black;
+  font-weight: 400;
+  font-size: 1.4em;
+}
+
+body {
+  padding: 0 0 0 20px;
+}
+

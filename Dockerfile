@@ -33,6 +33,9 @@ RUN wget https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp -
 # Copy the current directory contents into the container at /app
 COPY main.cpp .
 COPY justfile .
+COPY templates .
+COPY static .
+
 
 # Compile the app C++ code
 RUN just

@@ -31,7 +31,7 @@ docker-build:
 
 # Run the Docker container
 docker-run:
-    docker run -d --name {{CONTAINER}} --network host {{IMAGE}}
+    docker run --rm -d --name {{CONTAINER}} --network host {{IMAGE}}
 
 # Stop the Docker container
 docker-stop:

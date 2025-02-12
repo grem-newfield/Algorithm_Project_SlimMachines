@@ -1,4 +1,5 @@
 #include "lodepng.h"
+#include "database.h"
 #include <chrono>
 #include <crow.h>
 #include <crow/http_response.h>
@@ -11,98 +12,127 @@
 void debug(const char *s) { std::cout << "DEBUG: " << s << std::endl; }
 void debug(std::string s) { std::cout << "DEBUG: " << s << std::endl; }
 
-#include "graph.h"
+std::vector<unsigned char> generate_png()
+{
+  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 
-int create_database(sqlite3 *&db) {
-  int rc = sqlite3_open("example.db", &db);
-  if (rc) {
-    std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
-    return rc;
+  unsigned width = 256, height = 256;
+  std::vector<unsigned char> image(width * height * 4);
+  for (unsigned y = 0; y < height; y++)
+  {
+    for (unsigned x = 0; x < width; x++)
+    {
+      image[4 * width * y + 4 * x + 0] = x % 256;
+      image[4 * width * y + 4 * x + 1] = y % 256;
+      image[4 * width * y + 4 * x + 2] = 128;
+      image[4 * width * y + 4 * x + 3] = 255;
+    }
   }
+  std::vector<unsigned char> png;
+  unsigned error = lodepng::encode(png, image, width, height);
+  if (error)
+  {
+    std::cerr << "encoder error " << error << ": " << lodepng_error_text(error)
+              << std::endl;
+  }
+  std::chrono::time_point end = std::chrono::high_resolution_clock::now();
+  long nanos =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+  float sec = (float)nanos / 1e9;
 
-  const char *sql = "CREATE TABLE IF NOT EXISTS Users (ID INTEGER PRIMARY KEY "
-                    "AUTOINCREMENT, Data BLOB NOT NULL);";
-  char *errMsg = nullptr;
-  rc = sqlite3_exec(db, sql, nullptr, nullptr, &errMsg);
-  if (rc != SQLITE_OK) {
-    std::cerr << "SQL error: " << errMsg << std::endl;
-    sqlite3_free(errMsg);
-  }
-  return rc;
+  debug("Generated PNG in " + std::to_string(sec) + " seconds");
+  return png;
 }
 
-int main() {
-  crow::SimpleApp app;
-  sqlite3 *db = nullptr;
+// Function to initialize the database
 
-  if (create_database(db) != SQLITE_OK) {
-    return 1;
-  }
+int main()
+{
+    crow::SimpleApp app;
+   
 
-  CROW_ROUTE(app, "/generate/image")([]() {
-    crow::response res;
-    res.set_header("Connection", "Close");
-    res.set_header("Content-Type", "image/png");
-    std::vector<int> test_data = {70,  80,  90,  100, 110,
-                                  120, 130, 140, 150, 160};
-    std::shuffle(test_data.begin(), test_data.end(),
-                 std::default_random_engine());
-    int w = 1024;
-    int h = 300;
-    auto png = generate_png(w, h, test_data);
-    std::cout << "png size:" << png.size();
-    auto scaled_png = rescale(png, w, h, w * 2, h * 2, false);
-    std::cout << "scaled png size:" << scaled_png.size();
-    res.write(std::string(scaled_png.begin(), scaled_png.end()));
-    return res;
-  });
-  // CROW_ROUTE(app, "/")([]() {
-  //   auto page = crow::mustache::load("index.html");
-  //   std::string name = "Giovanni";
-  //   crow::mustache::context ctx({{"user", name}});
-  //   crow::response res(page.render(ctx));
-  //   res.set_header("Connection", "Close");
-  //   return res;
-  // });
+    if (create_database() != SQLITE_OK)
+    {
+        return 1;
+    }
 
-  CROW_ROUTE(app, "/")([]() {
-    auto page = crow::mustache::load("index.html");
+    CROW_ROUTE(app, "/generate/image")([]()
+    {
+        crow::response res;
+        res.set_header("Connection", "Close");
+        res.set_header("Content-Type", "image/png");
 
-    crow::mustache::context ctx;
-    ctx["user"] = "Giovanni"; // Store key-value pairs in context directly
+        // Ensure `generate_png()` is implemented
+        std::vector<unsigned char> png = generate_png();
+        res.write(std::string(png.begin(), png.end()));
 
-    crow::response res(page.render(ctx));
-    res.set_header("Connection", "Close");
+        return res;
+    });
 
-    return res;
-  });
+    CROW_ROUTE(app, "/")([]()
+    {
+        auto page = crow::mustache::load("index.html");
 
-  CROW_ROUTE(app, "/upload")
-      .methods(crow::HTTPMethod::POST)([](const crow::request &req) {
-        auto body = req.body;
-        crow::json::rvalue formData = crow::json::load(body);
-        // debug("form data: " + std::string(formData));
+        crow::mustache::context ctx;
+        ctx["user"] = "Giovanni";
 
-        if (!formData) {
-          auto res = crow::response(400, "Invalid form data");
-          res.set_header("Connection", "Close");
-          return res;
+        crow::response res(page.render(ctx));
+        res.set_header("Connection", "Close");
+
+        return res;
+    });
+
+    // API route to add user data
+    CROW_ROUTE(app, "/add_user_data").methods(crow::HTTPMethod::POST)([](const crow::request &req)
+    {
+        auto body = crow::json::load(req.body);
+        if (!body)
+        {
+            return crow::response(400, "Invalid JSON");
         }
 
-        // Access form fields
-        std::string dataInput = formData["dataInput"].s();
+        std::string cookie_uuid = body["cookie_uuid"].s();
+        std::string data = body["data"].s();
+        std::string expiration_date = body["expiration_date"].s();
 
-        // Process the form data as needed
-        std::ostringstream os;
-        os << "Received data: " << dataInput;
+        if (insert_user_data(cookie_uuid, data, expiration_date) == SQLITE_DONE)
+        {
+            return crow::response(200, "Data inserted successfully");
+        }
+        else
+        {
+            return crow::response(500, "Database insertion failed");
+        }
+    });
 
-        auto res = crow::response(os.str());
-        res.set_header("Connection", "Close");
-        return res;
-      });
+    // API route to get user data
+    CROW_ROUTE(app, "/get_user_data").methods(crow::HTTPMethod::GET)([](const crow::request &req)
+    {
+        auto params = req.url_params;
+        std::string cookie_uuid = params.get("cookie_uuid");
+        if (cookie_uuid.empty())
+        {
+            return crow::response(400, "Missing cookie_uuid parameter");
+        }
 
-  app.port(8080).multithreaded().run();
+        std::string data = fetch_user_data(cookie_uuid);
+        if (data.empty())
+        {
+            return crow::response(404, "Data not found");
+        }
 
-  sqlite3_close(db);
-  return 0;
+        return crow::response(200, data);
+    });
+
+    // API route to delete expired cookies
+    CROW_ROUTE(app, "/delete_expired").methods(crow::HTTPMethod::POST)([]()
+    {
+        delete_expired_cookies();
+        return crow::response(200, "Expired cookies deleted.");
+    });
+
+    app.port(8080).multithreaded().run();
+
+    sqlite3_close(db); // Close the database on exit
+    return 0;
 }

@@ -5,8 +5,8 @@ LDFLAGS := "-L/usr/local/lib -lpthread -lz -lssl -lsqlite3"
 
 # Define the target executable and source files
 TARGET := "slim_machines_app"
-SRCS := "main.cpp lodepng.cpp"
-OBJS := "main.o lodepng.o"
+SRCS := "main.cpp lodepng.cpp database.cpp"
+OBJS := "main.o lodepng.o database.o"
 
 # Define the Docker image name
 IMAGE := TARGET + "_image"
@@ -16,6 +16,7 @@ CONTAINER := TARGET + "_container"
 build:
     {{CXX}} {{CXXFLAGS}} -c main.cpp -o main.o
     {{CXX}} {{CXXFLAGS}} -c lodepng.cpp -o lodepng.o
+    {{CXX}} {{CXXFLAGS}} -c database.cpp -o database.o
     {{CXX}} {{CXXFLAGS}} -o {{TARGET}} {{OBJS}} {{LDFLAGS}}
 
 # Define the clean rule

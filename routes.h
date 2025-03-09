@@ -3,13 +3,18 @@
 #include "graph.h"
 #include <crow.h>
 #include <sstream>
+#include <vector>
+#include <random>
+
+
 
 inline void def_routes(crow::SimpleApp &app) {
 
   CROW_ROUTE(app, "/")([]() {
     auto page = crow::mustache::load("index.html");
-    std::string name = "Giovanni";
-    crow::mustache::context ctx({{"user", name}});
+    std::string db_path = "database.db";
+    std::string cookie_uuid = get_cookie_uuid_from_db(db_path);
+    crow::mustache::context ctx({{"user", cookie_uuid}});
     // ctx["user"] = "Giovanni"; //or store key-value pairs in context directly
     crow::response res(page.render(ctx));
     res.set_header("Connection", "Close");
@@ -20,8 +25,13 @@ inline void def_routes(crow::SimpleApp &app) {
     crow::response res;
     res.set_header("Connection", "Close");
     res.set_header("Content-Type", "image/png");
-    std::vector<int> test_data = {70,  80,  90,  100, 110,
-                                  120, 130, 140, 150, 160};
+    std::vector<int> test_data = get_data_from_db(db_path);
+
+    if(test_data.empty()){
+      return crow__response(500, "Error: No data found in database");
+      
+    }
+                                  
     std::shuffle(test_data.begin(), test_data.end(),
                  std::default_random_engine());
     int w = 1024;

@@ -16,7 +16,7 @@ CONTAINER := TARGET + "_container"
 build:
     {{CXX}} {{CXXFLAGS}} -c main.cpp -o main.o
     {{CXX}} {{CXXFLAGS}} -c lodepng.cpp -o lodepng.o
-    {{CXX}} {{CXXFLAGS}} -c database.cpp -o database.o
+    {{CXX}} {{CXXFLAGS}} -c database.cpp -o database.oq
     {{CXX}} {{CXXFLAGS}} -o {{TARGET}} {{OBJS}} {{LDFLAGS}}
 
 # Define the clean rule

@@ -89,6 +89,42 @@ std::string fetch_user_data(const std::string &cookie_uuid)
     return data;
 }
 
+std::vector <int> get_data_from_db(const std::string &db_path){
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    std::vector <int> data;
+  
+    if (sqlite3_open(db_path.c_str(), &db) == SQLITE_OK){
+      std::string query = "SELECT value FROM health_data;";
+      if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK ){
+        while (sqlite3_step(stmt) == SQLITE_ROW){
+          data.push_back(sqlite3_column_int(stmt, 0));
+        }
+      }
+      sqlite3_finalize(stmt);
+    }
+    sqlite3_close(db);
+    return data;
+  }
+
+  std:: string get_cookie_uuid_from_db(const std:: string &db_path){
+    sqlite *db;
+    sqlite3_stmt *stmt;
+    std:: string cookie_uuid;
+
+    if(sqlite3_open (db_path.c_str(), &db) == SQLITE_OK){
+        std::string query = "SELECT COOKIE_UUID FROM USER DATA LIMIT 1;";
+        if(sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK){
+            if(sqlite3_step(stmt) == SQLITE_ROW){
+                cookie_uuid = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+            }
+        }
+        sqlite3_finalize(stmt);
+    }
+    sqlite3_close(db);
+    return cookie_uuid;
+  }
+
 // Function to delete expired cookies
 void delete_expired_cookies()
 {

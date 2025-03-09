@@ -25,10 +25,10 @@ inline void def_routes(crow::SimpleApp &app) {
     crow::response res;
     res.set_header("Connection", "Close");
     res.set_header("Content-Type", "image/png");
-    std::vector<int> test_data = get_data_from_db(db_path);
+    std::vector<int> test_data = get_data_from_db("database.db");
 
     if(test_data.empty()){
-      return crow__response(500, "Error: No data found in database");
+      return crow::response(500, "Error: No data found in database");
       
     }
                                   

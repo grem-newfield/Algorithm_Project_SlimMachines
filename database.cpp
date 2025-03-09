@@ -145,7 +145,7 @@ std::vector <int> get_data_from_db(const std::string &db_path){
   }
 
   std:: string get_cookie_uuid_from_db(const std:: string &db_path){
-    sqlite *db;
+    sqlite3 *db;
     sqlite3_stmt *stmt;
     std:: string cookie_uuid;
 

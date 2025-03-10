@@ -34,12 +34,15 @@ int create_database()
 }
 
 // Function to insert user data into the database
-int insert_user_data(const std::string &cookie_uuid, const std::string &data_json, const std::string &expiration_date)
+int insert_or_update_user_data(const std::string &cookie_uuid, const std::string &data_json, const std::string &expiration_date)
 {
     sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO USER_DATA (COOKIE_UUID, DATA, EXPIRATION_DATE) VALUES (?, ?, ?);";
+    const char *sql_check = "SELECT COUNT(*) FROM USER_DATA WHERE COOKIE_UUID = ?;";
+    const char *sql_insert = "INSERT INTO USER_DATA (COOKIE_UUID, DATA, EXPIRATION_DATE) VALUES (?, ?, ?);";
+    const char *sql_update = "UPDATE USER_DATA SET DATA = ?, EXPIRATION_DATE = ? WHERE COOKIE_UUID = ?;";
 
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+    // Check if the entry exists
+    int rc = sqlite3_prepare_v2(db, sql_check, -1, &stmt, nullptr);
     if (rc != SQLITE_OK)
     {
         std::cerr << "SQL prepare error: " << sqlite3_errmsg(db) << std::endl;
@@ -47,13 +50,47 @@ int insert_user_data(const std::string &cookie_uuid, const std::string &data_jso
     }
 
     sqlite3_bind_text(stmt, 1, cookie_uuid.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, data_json.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, expiration_date.c_str(), -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    bool exists = false;
+    if (rc == SQLITE_ROW)
+    {
+        exists = sqlite3_column_int(stmt, 0) > 0;
+    }
+    sqlite3_finalize(stmt);
+
+    // Insert or update based on existence
+    if (exists)
+    {
+        rc = sqlite3_prepare_v2(db, sql_update, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK)
+        {
+            std::cerr << "SQL prepare error: " << sqlite3_errmsg(db) << std::endl;
+            return rc;
+        }
+
+        sqlite3_bind_text(stmt, 1, data_json.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, expiration_date.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, cookie_uuid.c_str(), -1, SQLITE_STATIC);
+    }
+    else
+    {
+        rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK)
+        {
+            std::cerr << "SQL prepare error: " << sqlite3_errmsg(db) << std::endl;
+            return rc;
+        }
+
+        sqlite3_bind_text(stmt, 1, cookie_uuid.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, data_json.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, expiration_date.c_str(), -1, SQLITE_STATIC);
+    }
 
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE)
     {
-        std::cerr << "SQL insert error: " << sqlite3_errmsg(db) << std::endl;
+        std::cerr << "SQL execution error: " << sqlite3_errmsg(db) << std::endl;
     }
 
     sqlite3_finalize(stmt);

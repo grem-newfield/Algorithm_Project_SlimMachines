@@ -155,6 +155,7 @@ void draw_number(std::vector<unsigned char> &image, int width, int height,
 
 std::vector<unsigned char> generate_png(int width, int height,
                                         std::vector<int> data) {
+  if (data.size() == 0) {return {0};}
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 
   int size = width * height;

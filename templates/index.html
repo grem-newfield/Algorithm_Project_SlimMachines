@@ -1,21 +1,59 @@
 <!doctype html>
+<html lang="en">
+
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yes</title>
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
   <link rel="stylesheet" href="/static/style.css" />
   <link rel="stylesheet" href="/static/normalize.css" />
-  <script src="/static/htmx.min.js"></script>
+
+  <script>
+    function serializeForm() {
+      const form = document.getElementById('dataInputForm');
+      const formData = new FormData(form);
+      const jsonData = {};
+
+      for (const [key, value] of formData.entries()) {
+        jsonData[key] = value;
+      }
+
+      return JSON.stringify(jsonData);
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+      const jsonData = serializeForm();
+
+      fetch('/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: jsonData
+      }).then(() => {
+        const img_element = document.querySelector('.graph_png img');
+        img_element.src = '/generate/image?' + new Date().getTime();
+      }).catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+  </script>
 </head>
+
 <body>
   <p>Hello {{user}}!</p>
-  <p><b>Bold</b> Normal</p>
-  <button hx-post="/clicked" hx-swap="outerHTML">Click Me</button>
-  <form hx-post="/upload" hx-swap="innerHTML:target">
-    <label for="dataInput"> Enter Data: </label>
-    <input type="text" id="dataInput" name="dataInput" required />
+
+  <form id="dataInputForm" onsubmit="submitForm(event)">
+    <label for="data_input">Enter Data:</label>
+    <input type="text" name="data_input" required />
     <button type="submit">Submit</button>
   </form>
 
   <div class="graph_png">
-    <img src="/generate/image" alt="Test Image" />
+    <img src="/generate/image" alt="Graph Image" />
   </div>
 </body>
+
+</html>

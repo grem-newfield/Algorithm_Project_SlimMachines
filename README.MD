@@ -11,8 +11,8 @@ The project is a server application designed to generate health parameter graphs
 
 ### Frontend (Web)
 
-- **HTMX**: [htmx.org](https://htmx.org/)
-  - HTMX is used to enhance the web interface with dynamic content loading and user interaction.
+- **HTML/JavaScript**:
+  - Couple of JS functions to send JSON from <form>.
 
 ### Backend (C++)
 
@@ -43,7 +43,6 @@ The project is a server application designed to generate health parameter graphs
     just docker-build # to run locally.
     ```
 
-
 3. Run the server:
     ```sh
     ./slim_machines_app
@@ -71,5 +70,4 @@ This project is provided "AS IS" without any warranty of any kind, express or im
 
 - [Crow](https://github.com/CrowCpp/Crow)
 - [LodePNG](https://github.com/lvandeve/lodepng)
-- [HTMX](https://htmx.org/)
 - [SQLite](https://www.sqlite.org/)
